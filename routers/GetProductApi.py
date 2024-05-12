@@ -6,30 +6,34 @@ from database.models.Product import ProductCategoryDb, ProductDb
 router = APIRouter()
 
 
-@router.get("/category")
-async def getUserBasicInfoApi(
-    shop: int,
-    current_user: UserBasicInfoModel = Depends(get_current_active_user)):
+@router.get("/product")
+async def getProductInfoApi(
+    shop: int, _: UserBasicInfoModel = Depends(get_current_active_user)):
     product_category = await ProductCategoryDb.get_category_by_shop_id(shop)
     if product_category is None:
         return {"error": "No category found"}
-    result = []
+    result_all = []
+    result_category = []
     for category in product_category:
         cat_products = await ProductDb.get_product_by_category_id(category.id)
         if cat_products is not None:
             children = []
             for product in cat_products:
-                children.append({
+                info = {
                     "id": product.id,
+                    "catId": category.id,
+                    "catName": category.name,
                     "name": product.name,
                     "price": product.price,
                     "image": product.image,
                     "stock": product.stock,
                     "description": product.description
-                })
-            result.append({
+                }
+                children.append(info)
+                result_all.extend(info)
+            result_category.append({
                 "id": category.id,
                 "catName": category.name,
                 "children": children
             })
-    return result
+    return {"all": result_all, "category": result_category}
