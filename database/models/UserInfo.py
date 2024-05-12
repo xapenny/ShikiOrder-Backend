@@ -25,7 +25,7 @@ class UserInfoDb(db.Model):
         return query  # type: ignore
 
     @classmethod
-    async def isUserExists(cls, open_id: int) -> bool:
+    async def is_user_exists(cls, open_id: int) -> bool:
         query: Optional["UserInfoDb"] = await cls.query.where(
             cls.open_id == open_id).gino.first()
         if query:
@@ -33,14 +33,14 @@ class UserInfoDb(db.Model):
         return False
 
     @classmethod
-    async def addUser(cls,
-                      open_id: str,
-                      avatar: str,
-                      total_points: int,
-                      level_exp: int,
-                      nickname: str,
-                      phone: Optional[int] = None,
-                      gender: Optional[str] = '保密') -> Optional["UserInfoDb"]:
+    async def add_user(cls,
+                       open_id: str,
+                       avatar: str,
+                       total_points: int,
+                       level_exp: int,
+                       nickname: str,
+                       phone: Optional[int] = None,
+                       gender: Optional[str] = '保密') -> Optional["UserInfoDb"]:
 
         create = await cls.create(open_id=open_id,
                                   avatar=avatar,

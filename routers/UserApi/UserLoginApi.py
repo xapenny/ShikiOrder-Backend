@@ -28,11 +28,11 @@ async def login_for_access_token(response: Response,
 
     user = await UserInfoDb.get_user_by_open_id(open_id)
     if user is None:
-        user = await UserInfoDb.addUser(open_id=open_id,
-                                        avatar=request.avatar,
-                                        total_points=0,
-                                        level_exp=0,
-                                        nickname=request.nickname)
+        user = await UserInfoDb.add_user(open_id=open_id,
+                                         avatar=request.avatar,
+                                         total_points=0,
+                                         level_exp=0,
+                                         nickname=request.nickname)
     if not user:
         response.status_code = status.HTTP_400_BAD_REQUEST
         return {"error": "登录失败: 2"}
