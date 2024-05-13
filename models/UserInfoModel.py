@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-from typing import Optional
+from typing import Optional, Literal
 
 
 class UserBasicInfoModel(BaseModel):
@@ -7,6 +7,12 @@ class UserBasicInfoModel(BaseModel):
     nickname: str
     avatar: str
     phone: Optional[int]
-    gender: str
+    gender: Literal['男', '女', '保密']
     total_points: int
     level_exp: int
+
+
+class UpdateUserInfoRequestModel(BaseModel):
+    nickname: str
+    gender: Literal['男', '女', '保密']
+    phone: int

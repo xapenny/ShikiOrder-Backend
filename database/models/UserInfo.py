@@ -1,5 +1,5 @@
-from typing import Optional
-from sqlalchemy import BigInteger, Column, String, Integer
+from typing import Optional, Literal
+from sqlalchemy import BigInteger, Column, String, Integer, update
 
 from database.dbInit import db
 
@@ -33,14 +33,16 @@ class UserInfoDb(db.Model):
         return False
 
     @classmethod
-    async def add_user(cls,
-                       open_id: str,
-                       avatar: str,
-                       total_points: int,
-                       level_exp: int,
-                       nickname: str,
-                       phone: Optional[int] = None,
-                       gender: Optional[str] = '保密') -> Optional["UserInfoDb"]:
+    async def add_user(
+        cls,
+        open_id: str,
+        avatar: str,
+        total_points: int,
+        level_exp: int,
+        nickname: str,
+        phone: Optional[int] = None,
+        gender: Optional[Literal['男', '女', '保密']] = '保密'
+    ) -> Optional["UserInfoDb"]:
 
         create = await cls.create(open_id=open_id,
                                   avatar=avatar,
@@ -50,3 +52,28 @@ class UserInfoDb(db.Model):
                                   phone=phone,
                                   gender=gender)
         return create
+
+    @classmethod
+    async def update_user_info(cls,
+                               open_id: str,
+                               avatar: Optional[str] = None,
+                               total_points: Optional[int] = None,
+                               level_exp: Optional[int] = None,
+                               nickname: Optional[str] = None,
+                               phone: Optional[int] = None,
+                               gender: Optional[Literal['男', '女',
+                                                        '保密']] = None):
+        query = update(cls).where(cls.open_id == open_id)
+        if avatar:
+            query = query.values(avatar=avatar)
+        if total_points:
+            query = query.values(total_points=total_points)
+        if level_exp:
+            query = query.values(level_exp=level_exp)
+        if nickname:
+            query = query.values(nickname=nickname)
+        if phone:
+            query = query.values(phone=phone)
+        if gender:
+            query = query.values(gender=gender)
+        await db.status(query)
