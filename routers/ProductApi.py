@@ -3,10 +3,10 @@ from fastapi import APIRouter, Depends, Response, status
 from dependencies import get_current_active_user
 from database.models.Product import ProductCategoryDb, ProductDb
 
-router = APIRouter()
+router = APIRouter(prefix='/product')
 
 
-@router.get("/product")
+@router.get("/all")
 async def getProductInfoApi(
     shop: int,
     response: Response,
