@@ -61,18 +61,37 @@ class OrderDb(db.Model):
                                   comments=comments)
         return create
 
+    @classmethod
     async def remove_order(cls, order_id: int):
         query = await cls.query.where(cls.id == order_id).gino.first()
         if not query:
             return None
         await query.delete()
 
+    @classmethod
     async def update_order_state(cls, order_id: int, state: int):
         query = update(cls).where(cls.id == order_id).values(state=state)
         await db.status(query)
 
+    @classmethod
     async def get_user_order(cls, open_id: str) -> Optional[list["OrderDb"]]:
         query = await cls.query.where(cls.open_id == open_id).gino.all()
         if not query:
             return None
         return query
+
+    @classmethod
+    async def get_order_by_id(cls, order_id: int) -> Optional["OrderDb"]:
+        query = await cls.query.where(cls.id == order_id).gino.first()
+        if not query:
+            return None
+        return query
+
+    @classmethod
+    async def get_user_recent_order_id(cls, open_id: str) -> list["int"]:
+        query = await cls.query.where(cls.open_id == open_id
+                                      ).order_by(cls.id.desc()
+                                                 ).limit(10).gino.all()
+        if not query:
+            return None
+        return [x.id for x in query]

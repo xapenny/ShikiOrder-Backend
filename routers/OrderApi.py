@@ -7,6 +7,7 @@ from database.models.Order import OrderDb, OrderState
 from database.models.Product import ProductDb
 from datetime import datetime
 from utils.verify_code import VerifyCode
+from random import randint
 
 router = APIRouter(prefix="/order")
 
@@ -79,18 +80,95 @@ async def createOrderApi(
         response.status_code = status.HTTP_400_BAD_REQUEST
         return {"error": "创建订单失败"}
 
+    return {"order_id": order.id}
+
+
+@router.get("/history")
+async def getUserRecentOrderHistory(
+        user_info: UserBasicInfoModel = Depends(get_current_active_user)):
+    order_ids = await OrderDb.get_user_recent_order_id(user_info.open_id)
+    return {"order_ids": order_ids if order_ids is not None else []}
+
+
+@router.get("/info")
+async def getOrderInfo(
+    id: int,
+    response: Response,
+    user_info: UserBasicInfoModel = Depends(get_current_active_user)):
+    order_info = await OrderDb.get_order_by_id(id)
+    if order_info is None:
+        response.status_code = status.HTTP_400_BAD_REQUEST
+        return {"error": "订单不存在"}
+    if order_info.open_id != user_info.open_id:
+        response.status_code = status.HTTP_400_BAD_REQUEST
+        return {"error": "非法请求"}
+
     return {
-        "order_id": order.id,
-        "verify_code": verify_code,
-        "time": order.time,
-        "state": order.state,
-        "shop_name": order.shop_name,
-        "products": {
-            product_id: quantity
-            for product_id, quantity in zip(product_ids.split(";"),
-                                            product_quantities.split(";"))
-        },
-        "is_takeout": order.is_takeout,
-        "comments": order.comments,
-        "paid_price": order.paid_price
+        "order_id":
+        order_info.id,
+        "verify_code":
+        order_info.verify_code,
+        "time":
+        order_info.time,
+        "state":
+        order_info.state,
+        "shop_name":
+        order_info.shop_name,
+        "table_id":
+        order_info.table_id,
+        "products": [[int(product_id), int(quantity)]
+                     for product_id, quantity in zip(
+                         order_info.product_ids.split(";"),
+                         order_info.product_quantities.split(";"))],
+        "is_takeout":
+        order_info.is_takeout,
+        "comments":
+        order_info.comments,
+        "paid_price":
+        order_info.paid_price
     }
+
+
+@router.get("/cancel")
+async def cancelOrder(
+    id: int,
+    response: Response,
+    user_info: UserBasicInfoModel = Depends(get_current_active_user)):
+    order = await OrderDb.get_order_by_id(id)
+    if order is None:
+        response.status_code = status.HTTP_400_BAD_REQUEST
+        return {"error": "订单不存在"}
+    if order.open_id != user_info.open_id:
+        response.status_code = status.HTTP_400_BAD_REQUEST
+        return {"error": "非法请求"}
+    if order.state != OrderState.UNPAID:
+        response.status_code = status.HTTP_400_BAD_REQUEST
+        return {"error": "订单状态不允许取消"}
+
+    await OrderDb.update_order_state(order_id=id, state=OrderState.CANCELED)
+    return {"order_id": id}
+
+
+@router.get('/pay')
+async def payOrder(
+    id: int,
+    response: Response,
+    user_info: UserBasicInfoModel = Depends(get_current_active_user)):
+    order = await OrderDb.get_order_by_id(id)
+    if order is None:
+        response.status_code = status.HTTP_400_BAD_REQUEST
+        return {"error": "订单不存在"}
+    if order.open_id != user_info.open_id:
+        response.status_code = status.HTTP_400_BAD_REQUEST
+        return {"error": "非法请求"}
+    if order.state != OrderState.UNPAID:
+        response.status_code = status.HTTP_400_BAD_REQUEST
+        return {"error": "订单状态不允许支付"}
+
+        # Fake Payment
+    if (randint(0, 1)):
+        await OrderDb.update_order_state(order_id=id, state=OrderState.PENDING)
+        return {"order_id": id}
+    else:
+        response.status_code = status.HTTP_400_BAD_REQUEST
+        return {"error": "付款失败(测试)"}
