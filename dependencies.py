@@ -35,7 +35,8 @@ async def get_user(open_id: str) -> Optional[UserBasicInfoModel]:
         "phone": user_obj.phone,
         "total_points": user_obj.total_points,
         "level_exp": user_obj.level_exp,
-        "gender": user_obj.gender
+        "gender": user_obj.gender,
+        "last_signin_date": user_obj.last_signin_date
     }
     return UserBasicInfoModel(**user_dict)
 

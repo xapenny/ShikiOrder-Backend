@@ -1,5 +1,6 @@
 from pydantic import BaseModel
 from typing import Optional, Literal
+from datetime import date
 
 
 class UserBasicInfoModel(BaseModel):
@@ -10,6 +11,7 @@ class UserBasicInfoModel(BaseModel):
     gender: Literal['男', '女', '保密']
     total_points: int
     level_exp: int
+    last_signin_date: Optional[date]
 
 
 class UpdateUserInfoRequestModel(BaseModel):

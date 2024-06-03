@@ -1,4 +1,4 @@
-from datetime import timedelta
+from datetime import timedelta, datetime
 
 from fastapi import APIRouter, Response, status, Depends
 
@@ -37,6 +37,7 @@ async def login_for_access_token(response: Response,
     if not user:
         response.status_code = status.HTTP_400_BAD_REQUEST
         return {"error": "登录失败: 2"}
+    await UserInfoDb.update_user_info(open_id=open_id, session_key=session_key)
     access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     access_token = create_access_token(data={
         "open_id": open_id,
@@ -72,3 +73,24 @@ async def updateUserInfo(
                                       phone=request.phone,
                                       gender=request.gender)
     return {"message": "更新用户信息成功"}
+
+
+@router.get("/points")
+async def getUserPoints(
+        current_user: UserBasicInfoModel = Depends(get_current_active_user)):
+    return {"points": current_user.total_points}
+
+
+@router.get("/signin")
+async def signin(
+    response: Response,
+    current_user: UserBasicInfoModel = Depends(get_current_active_user)):
+    if datetime.now().date() == current_user.last_signin_date:
+        response.status_code = status.HTTP_400_BAD_REQUEST
+        return {"error": "今日已签到过"}
+    await UserInfoDb.update_user_info(open_id=current_user.open_id,
+                                      total_points=current_user.total_points +
+                                      1,
+                                      level_exp=current_user.level_exp + 10,
+                                      last_signin_date=datetime.now().date())
+    return {"added_points": 1, "added_exp": 10}
