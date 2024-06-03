@@ -10,8 +10,6 @@ class ShopDb(db.Model):
     name = Column(String(255), nullable=False)
     address = Column(String(255), nullable=False)
     announcement = Column(String(255))
-    location_lat = Column(DECIMAL(10, 7))
-    location_lng = Column(DECIMAL(10, 7))
     about = Column(String(255), nullable=False)
     email = Column(String(255), nullable=False)
     phone = Column(BigInteger)
@@ -23,16 +21,12 @@ class ShopDb(db.Model):
             address: str,
             about: str,
             email: str,
-            location_lat: float,
-            location_lng: float,
             phone: Optional[int] = None,
             announcement: Optional[str] = None) -> Optional["ShopDb"]:
         create = await cls.create(name=name,
                                   address=address,
                                   about=about,
                                   email=email,
-                                  location_lat=location_lat,
-                                  location_lng=location_lng,
                                   phone=phone,
                                   announcement=announcement)
         return create

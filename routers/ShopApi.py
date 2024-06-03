@@ -21,8 +21,6 @@ async def getAllShops(
             'name': shop.name,
             'address': shop.address,
             'announcement': shop.announcement,
-            'location_lat': shop.location_lat,
-            'location_lng': shop.location_lng,
             'about': shop.about,
             'email': shop.email,
             'phone': shop.phone

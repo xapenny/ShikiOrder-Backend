@@ -2,7 +2,7 @@ from models.UserInfoModel import UserBasicInfoModel
 from models.CreateOrderRequestModel import CreateOrderRequestModel
 from fastapi import APIRouter, Depends, status, Response
 from dependencies import get_current_active_user
-from database.models.Coupon import CouponDb
+from database.models.Coupon import CouponDb, UserCouponDb
 from database.models.Order import OrderDb, OrderState
 from database.models.Product import ProductDb
 from datetime import datetime
@@ -37,9 +37,6 @@ async def createOrderApi(
         if coupon is None:
             response.status_code = status.HTTP_400_BAD_REQUEST
             return {"error": "没有找到该优惠券"}
-        if coupon.open_id != user_info.open_id:
-            response.status_code = status.HTTP_400_BAD_REQUEST
-            return {"error": "非法请求"}
         # Calculate discount
         if coupon.threshold is not None and total_price < coupon.threshold:
             response.status_code = status.HTTP_400_BAD_REQUEST
@@ -57,7 +54,11 @@ async def createOrderApi(
 
     # Consume coupon
     if request.used_coupon_id != -1:
-        await CouponDb.consume_coupon(coupon_id=request.used_coupon_id)
+        coupon_result = await UserCouponDb.consume_user_coupon(
+            coupon_id=request.used_coupon_id, open_id=user_info.open_id)
+        if coupon_result is None:
+            response.status_code = status.HTTP_400_BAD_REQUEST
+            return {"error": "非法请求"}
 
     # Create order
     product_ids = ";".join([str(x[0]) for x in request.products])
