@@ -30,6 +30,7 @@ async def get_user(open_id: str) -> Optional[UserBasicInfoModel]:
 
     user_dict = {
         "open_id": user_obj.open_id,
+        "user_id": user_obj.id,
         "nickname": user_obj.nickname,
         "avatar": user_obj.avatar,
         "phone": user_obj.phone,

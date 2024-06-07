@@ -55,7 +55,7 @@ async def createOrderApi(
     # Consume coupon
     if request.used_coupon_id != -1:
         coupon_result = await UserCouponDb.consume_user_coupon(
-            coupon_id=request.used_coupon_id, open_id=user_info.open_id)
+            coupon_id=request.used_coupon_id, user_id=user_info.user_id)
         if coupon_result is None:
             response.status_code = status.HTTP_400_BAD_REQUEST
             return {"error": "非法请求"}
@@ -67,7 +67,7 @@ async def createOrderApi(
     order = await OrderDb.create_order(shop_id=request.shop_id,
                                        shop_name=request.shop_name,
                                        table_id=request.table_id,
-                                       open_id=user_info.open_id,
+                                       user_id=user_info.user_id,
                                        phone=request.phone,
                                        time=datetime.now(),
                                        is_takeout=request.is_takeout,
@@ -86,8 +86,10 @@ async def createOrderApi(
 
 @router.get("/history")
 async def getUserRecentOrderHistory(
-        user_info: UserBasicInfoModel = Depends(get_current_active_user)):
-    order_ids = await OrderDb.get_user_recent_order_id(user_info.open_id)
+    shop: int,
+    user_info: UserBasicInfoModel = Depends(get_current_active_user)):
+    order_ids = await OrderDb.get_user_recent_order_id(
+        user_id=user_info.user_id, shop_id=shop)
     return {"order_ids": order_ids if order_ids is not None else []}
 
 
@@ -100,7 +102,7 @@ async def getOrderInfo(
     if order_info is None:
         response.status_code = status.HTTP_400_BAD_REQUEST
         return {"error": "订单不存在"}
-    if order_info.open_id != user_info.open_id:
+    if order_info.user_id != user_info.user_id:
         response.status_code = status.HTTP_400_BAD_REQUEST
         return {"error": "非法请求"}
 
@@ -139,7 +141,7 @@ async def cancelOrder(
     if order is None:
         response.status_code = status.HTTP_400_BAD_REQUEST
         return {"error": "订单不存在"}
-    if order.open_id != user_info.open_id:
+    if order.user_id != user_info.user_id:
         response.status_code = status.HTTP_400_BAD_REQUEST
         return {"error": "非法请求"}
     if order.state != OrderState.UNPAID:
@@ -159,7 +161,7 @@ async def payOrder(
     if order is None:
         response.status_code = status.HTTP_400_BAD_REQUEST
         return {"error": "订单不存在"}
-    if order.open_id != user_info.open_id:
+    if order.user_id != user_info.user_id:
         response.status_code = status.HTTP_400_BAD_REQUEST
         return {"error": "非法请求"}
     if order.state != OrderState.UNPAID:

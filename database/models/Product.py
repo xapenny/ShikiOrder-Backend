@@ -36,6 +36,13 @@ class ProductDb(db.Model):
         return create
 
     @classmethod
+    async def get_product_by_id(cls, product_id: int) -> Optional["ProductDb"]:
+        query = await cls.query.where(cls.id == product_id).gino.first()
+        if not query:
+            return None
+        return query
+
+    @classmethod
     async def get_product_by_shop_id(
             cls, shop_id: int) -> Optional[list["ProductDb"]]:
         query = await cls.query.where(cls.shop_id == shop_id).gino.all()
@@ -61,9 +68,23 @@ class ProductDb(db.Model):
         return query
 
     @classmethod
-    async def update_product(cls, product_id: int, **kwargs):
+    async def update_product(cls, product_id: int, **kwargs) -> bool:
         query = update(cls).where(cls.id == product_id).values(**kwargs)
-        await db.status(query)
+        result = await db.status(query)
+        return True if result else False
+
+    @classmethod
+    async def get_all_products(cls) -> Optional[list["ProductDb"]]:
+        query = await cls.query.gino.all()
+        if not query:
+            return None
+        return query
+
+    @classmethod
+    async def is_category_id_exist(cls, category_id: int) -> bool:
+        query = await cls.query.where(cls.category_id == category_id
+                                      ).gino.first()
+        return True if query is not None else False
 
 
 class ProductCategoryDb(db.Model):
@@ -86,6 +107,14 @@ class ProductCategoryDb(db.Model):
         return create
 
     @classmethod
+    async def get_category_by_id(
+            cls, category_id: int) -> Optional["ProductCategoryDb"]:
+        query = await cls.query.where(cls.id == category_id).gino.first()
+        if not query:
+            return None
+        return query
+
+    @classmethod
     async def get_category_by_shop_id(
             cls, shop_id: int) -> Optional[list["ProductCategoryDb"]]:
         query = await cls.query.where(cls.shop_id == shop_id).gino.all()
@@ -94,10 +123,23 @@ class ProductCategoryDb(db.Model):
         return query
 
     @classmethod
+    async def update_category_name(cls, category_id: int, name: str):
+        query = update(cls).where(cls.id == category_id).values(name=name)
+        result = await db.status(query)
+        return result
+
+    @classmethod
     async def remove_category(
             cls, category_id: int) -> Optional["ProductCategoryDb"]:
         query = await cls.query.where(cls.id == category_id).gino.first()
         if not query:
             return None
         await query.delete()
+        return query
+
+    @classmethod
+    async def get_all_categories(cls) -> Optional[list["ProductCategoryDb"]]:
+        query = await cls.query.gino.all()
+        if not query:
+            return None
         return query

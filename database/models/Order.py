@@ -1,4 +1,5 @@
 from typing import Optional
+from datetime import datetime, timedelta
 from sqlalchemy import Column, String, Integer, BigInteger, update, DateTime, Boolean
 
 from database.dbInit import db
@@ -19,7 +20,7 @@ class OrderDb(db.Model):
     shop_id = Column(Integer, nullable=False)
     shop_name = Column(String(255), nullable=False)
     table_id = Column(Integer)
-    open_id = Column(String(255), nullable=False)
+    user_id = Column(Integer, nullable=False)
     phone = Column(BigInteger, nullable=False)
     time = Column(DateTime, nullable=False)
     is_takeout = Column(Boolean, nullable=False)
@@ -36,7 +37,7 @@ class OrderDb(db.Model):
             shop_id: int,
             shop_name: str,
             table_id: int,
-            open_id: str,
+            user_id: int,
             phone: int,
             time: str,
             is_takeout: bool,
@@ -49,7 +50,7 @@ class OrderDb(db.Model):
         create = await cls.create(shop_id=shop_id,
                                   shop_name=shop_name,
                                   table_id=table_id,
-                                  open_id=open_id,
+                                  user_id=user_id,
                                   phone=phone,
                                   time=time,
                                   is_takeout=is_takeout,
@@ -62,20 +63,22 @@ class OrderDb(db.Model):
         return create
 
     @classmethod
-    async def remove_order(cls, order_id: int):
+    async def remove_order(cls, order_id: int) -> Optional["OrderDb"]:
         query = await cls.query.where(cls.id == order_id).gino.first()
         if not query:
             return None
         await query.delete()
+        return query
 
     @classmethod
-    async def update_order_state(cls, order_id: int, state: int):
+    async def update_order_state(cls, order_id: int, state: int) -> bool:
         query = update(cls).where(cls.id == order_id).values(state=state)
-        await db.status(query)
+        result = await db.status(query)
+        return result
 
     @classmethod
-    async def get_user_order(cls, open_id: str) -> Optional[list["OrderDb"]]:
-        query = await cls.query.where(cls.open_id == open_id).gino.all()
+    async def get_user_order(cls, user_id: str) -> Optional[list["OrderDb"]]:
+        query = await cls.query.where(cls.user_id == user_id).gino.all()
         if not query:
             return None
         return query
@@ -88,10 +91,27 @@ class OrderDb(db.Model):
         return query
 
     @classmethod
-    async def get_user_recent_order_id(cls, open_id: str) -> list["int"]:
-        query = await cls.query.where(cls.open_id == open_id
-                                      ).order_by(cls.id.desc()
-                                                 ).limit(10).gino.all()
+    async def get_user_recent_order_id(cls, user_id: int,
+                                       shop_id: int) -> list["int"]:
+        query = await cls.query.where(cls.user_id == user_id
+                                      ).where(cls.shop_id == shop_id).order_by(
+                                          cls.id.desc()).limit(10).gino.all()
         if not query:
             return None
         return [x.id for x in query]
+
+    @classmethod
+    async def get_orders_by_shop_id(cls,
+                                    shop_id: int) -> Optional[list["OrderDb"]]:
+        query = await cls.query.where(cls.shop_id == shop_id).where(
+            cls.time >= datetime.now() - timedelta(days=30)).gino.all()
+        if not query:
+            return None
+        return query
+
+    @classmethod
+    async def get_all_orders(cls) -> Optional[list["OrderDb"]]:
+        query = await cls.query.gino.all()
+        if not query:
+            return None
+        return query

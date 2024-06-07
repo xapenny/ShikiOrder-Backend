@@ -8,7 +8,7 @@ class UserInfoDb(db.Model):
     __tablename__ = 'user'
 
     id = Column(Integer, primary_key=True)
-    open_id = Column(String(255), nullable=False)
+    open_id = Column(String(255), nullable=False, unique=True)
     nickname = Column(String(255), nullable=False)
     avatar = Column(String(255), nullable=False)
     total_points = Column(Integer, nullable=False)
@@ -58,17 +58,17 @@ class UserInfoDb(db.Model):
         return create
 
     @classmethod
-    async def update_user_info(cls,
-                               open_id: str,
-                               avatar: Optional[str] = None,
-                               total_points: Optional[int] = None,
-                               level_exp: Optional[int] = None,
-                               nickname: Optional[str] = None,
-                               phone: Optional[int] = None,
-                               session_key: Optional[str] = None,
-                               gender: Optional[Literal['男', '女',
-                                                        '保密']] = None,
-                               last_signin_date: Optional[Date] = None):
+    async def update_user_info(
+            cls,
+            open_id: str,
+            avatar: Optional[str] = None,
+            total_points: Optional[int] = None,
+            level_exp: Optional[int] = None,
+            nickname: Optional[str] = None,
+            phone: Optional[int] = None,
+            session_key: Optional[str] = None,
+            gender: Optional[Literal['男', '女', '保密']] = None,
+            last_signin_date: Optional[Date] = None) -> Optional["UserInfoDb"]:
         query = update(cls).where(cls.open_id == open_id)
         if avatar:
             query = query.values(avatar=avatar)
@@ -86,4 +86,19 @@ class UserInfoDb(db.Model):
             query = query.values(last_signin_date=last_signin_date)
         if session_key:
             query = query.values(session_key=session_key)
-        await db.status(query)
+        result = await db.status(query)
+        return result
+
+    @classmethod
+    async def get_all_users(cls) -> Optional[list["UserInfoDb"]]:
+        query = await cls.query.gino.all()
+        if not query:
+            return None
+        return query
+
+    @classmethod
+    async def get_user_by_phone(cls, phone: int) -> Optional["UserInfoDb"]:
+        query = await cls.query.where(cls.phone == phone).gino.first()
+        if not query:
+            return None
+        return query

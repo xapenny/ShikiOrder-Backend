@@ -5,6 +5,7 @@ from datetime import date
 
 class UserBasicInfoModel(BaseModel):
     open_id: str
+    user_id: int
     nickname: str
     avatar: str
     phone: Optional[int]

@@ -23,6 +23,10 @@ class Config:
     def get_wechat_config(cls):
         return cls.config['WECHAT']
 
+    @classmethod
+    def get_oss_config(cls):
+        return cls.config['OSS']
+
 
 if os.path.exists("configs/config.yaml"):
     Config.load_config()
