@@ -13,7 +13,7 @@ router = APIRouter(prefix="/order")
 
 
 @router.post("/create")
-async def createOrderApi(
+async def create_order(
     request: CreateOrderRequestModel,
     response: Response,
     user_info: UserBasicInfoModel = Depends(get_current_active_user)):
@@ -85,7 +85,7 @@ async def createOrderApi(
 
 
 @router.get("/history")
-async def getUserRecentOrderHistory(
+async def get_user_order_history(
     shop: int,
     user_info: UserBasicInfoModel = Depends(get_current_active_user)):
     order_ids = await OrderDb.get_user_recent_order_id(
@@ -94,7 +94,7 @@ async def getUserRecentOrderHistory(
 
 
 @router.get("/info")
-async def getOrderInfo(
+async def get_order_info(
     id: int,
     response: Response,
     user_info: UserBasicInfoModel = Depends(get_current_active_user)):
@@ -133,7 +133,7 @@ async def getOrderInfo(
 
 
 @router.get("/cancel")
-async def cancelOrder(
+async def cancel_order(
     id: int,
     response: Response,
     user_info: UserBasicInfoModel = Depends(get_current_active_user)):
@@ -153,7 +153,7 @@ async def cancelOrder(
 
 
 @router.get('/pay')
-async def payOrder(
+async def pay_order(
     id: int,
     response: Response,
     user_info: UserBasicInfoModel = Depends(get_current_active_user)):

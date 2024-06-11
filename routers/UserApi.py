@@ -48,13 +48,13 @@ async def login_for_access_token(response: Response,
 
 
 @router.get("/info", response_model=UserBasicInfoModel)
-async def getUserBasicInfoApi(
+async def get_user_info(
         current_user: UserBasicInfoModel = Depends(get_current_active_user)):
     return current_user
 
 
 @router.post("/update")
-async def updateUserInfo(
+async def update_user_info(
     request: UpdateUserInfoRequestModel,
     response: Response,
     current_user: UserBasicInfoModel = Depends(get_current_active_user)):
@@ -76,7 +76,7 @@ async def updateUserInfo(
 
 
 @router.get("/points")
-async def getUserPoints(
+async def get_user_points(
         current_user: UserBasicInfoModel = Depends(get_current_active_user)):
     return {"points": current_user.total_points}
 

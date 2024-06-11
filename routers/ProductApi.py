@@ -7,7 +7,7 @@ router = APIRouter(prefix='/product')
 
 
 @router.get("/all")
-async def getProductInfoApi(
+async def get_product_info_api(
     shop: int,
     response: Response,
     _: UserBasicInfoModel = Depends(get_current_active_user)):
