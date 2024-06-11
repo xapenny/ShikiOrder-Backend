@@ -8,11 +8,13 @@ from models.AdminModel import (
     RemoveProductCategoryRequestModel, UpdateProductCategoryRequestModel,
     CreateCouponRequestModel, RemoveCouponRequestModel, UpdateShopRequestModel,
     GiftCouponRequestModel, UpdatePointStoreItemRequestModel,
+    AddShopSwiperRequestModel, RemoveShopSwiperRequestModel,
     RemovePointStoreItemRequestModel)
 from database.models.AdminInfo import AdminInfoDb
 from database.models.UserInfo import UserInfoDb
 from database.models.Order import OrderDb
 from database.models.Shop import ShopDb
+from database.models.Swiper import SwiperDb
 from database.models.Product import ProductDb, ProductCategoryDb
 from database.models.Coupon import CouponDb, UserCouponDb
 from database.models.PointStore import PointStoreDb
@@ -31,6 +33,7 @@ async def get_admin_shops_api(current_admin: AdminBasicInfoModel = Depends(
         shops = [await ShopDb.get_shop_by_id(current_admin.permission)]
     return_list = []
     for shop in shops:
+        swipers = await SwiperDb.get_swipers_by_shop_id(shop_id=shop.id)
         return_list.append({
             "shopId": shop.id,
             "name": shop.name,
@@ -38,7 +41,8 @@ async def get_admin_shops_api(current_admin: AdminBasicInfoModel = Depends(
             "email": shop.email,
             "phone": shop.phone,
             "announcement": shop.announcement,
-            "about": shop.about
+            "about": shop.about,
+            "swipers": swipers if swipers is not None else []
         })
 
     return {"shops": return_list}
@@ -86,6 +90,52 @@ async def update_shop_api(
 
             return {"error": "修改失败"}
         return {"message": "修改成功"}
+
+
+@router.post("/swiper/add")
+async def add_shop_swiper_api(
+    request: AddShopSwiperRequestModel,
+    current_admin: AdminBasicInfoModel = Depends(get_current_active_admin)):
+    if current_admin.role == 0:
+        pass
+    elif current_admin.role == 1:
+        if current_admin.permission != request.shop_id:
+            return {"error": "权限不足"}
+    else:
+        return {"error": "权限不足"}
+
+    image_url = request.image
+    if not request.image.startswith('http'):
+        image_url = upload_image(request.image)
+        if image_url is None:
+            return {"error": "图片上传失败"}
+
+    result = await SwiperDb.add_swiper(shop_id=request.shop_id,
+                                       image=image_url)
+    if result is None:
+        return {"error": "添加失败"}
+    return {"message": "添加成功", "swiper_id": result.id}
+
+
+@router.post("/swiper/remove")
+async def remove_shop_swiper_api(
+    request: RemoveShopSwiperRequestModel,
+    current_admin: AdminBasicInfoModel = Depends(get_current_active_admin)):
+    swiper = await SwiperDb.get_swiper_by_id(swiper_id=request.swiper_id)
+    if swiper is None:
+        return {"error": "轮播图不存在"}
+    if current_admin.role == 0:
+        pass
+    elif current_admin.role == 1:
+        if current_admin.permission != swiper.shop_id:
+            return {"error": "权限不足"}
+    else:
+        return {"error": "权限不足"}
+
+    result = await SwiperDb.remove_swiper(swiper_id=request.swiper_id)
+    if result is None:
+        return {"error": "删除失败"}
+    return {"message": "删除成功"}
 
 
 @router.get("/order/get")
@@ -557,6 +607,7 @@ async def get_point_store_api(current_admin: AdminBasicInfoModel = Depends(
             })
     return {"items": return_list}
 
+
 @router.post("/point-store/update")
 async def update_point_store_item_api(
     request: UpdatePointStoreItemRequestModel,
@@ -601,6 +652,7 @@ async def update_point_store_item_api(
     if result is None:
         return {"error": "操作失败"}
     return {"message": "操作成功", "item_id": item_id}
+
 
 @router.post("/point-store/remove")
 async def remove_point_store_item_api(
