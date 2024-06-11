@@ -1,5 +1,6 @@
+from datetime import datetime
 from typing import Optional, Literal
-from sqlalchemy import Column, String, Integer, update
+from sqlalchemy import Column, String, Integer, DateTime, update
 
 from database.dbInit import db
 
@@ -67,6 +68,49 @@ class PointStoreDb(db.Model):
     @classmethod
     async def get_all_items(cls) -> Optional[list["PointStoreDb"]]:
         query = await cls.query.gino.all()
+        if not query:
+            return None
+        return query
+
+
+class PointStoreLogDb(db.Model):
+    __tablename__ = 'point_store_log'
+
+    id = Column(Integer, primary_key=True)
+    user_id = Column(Integer, nullable=False)
+    item_id = Column(Integer, nullable=False)
+    shop_id = Column(Integer, nullable=False)
+    express_id = Column(String(32))
+    created_at = Column(DateTime, server_default=db.func.now())
+
+    @classmethod
+    async def add_log(cls, user_id: int, item_id: int,
+                      shop_id: int) -> Optional["PointStoreLogDb"]:
+        create = await cls.create(user_id=user_id,
+                                  item_id=item_id,
+                                  shop_id=shop_id,
+                                  created_at=datetime.now())
+        return create
+
+    @classmethod
+    async def update_express_id(cls, log_id: int, express_id: str) -> bool:
+        query = update(cls).where(cls.id == log_id).values(
+            express_id=express_id)
+        result = await db.status(query)
+        return True if result else False
+
+    @classmethod
+    async def get_logs_by_user_id(
+            cls, user_id: int) -> Optional[list["PointStoreLogDb"]]:
+        query = await cls.query.where(cls.user_id == user_id).gino.all()
+        if not query:
+            return None
+        return query
+
+    @classmethod
+    async def get_logs_by_shop_id(
+            cls, shop_id: int) -> Optional[list["PointStoreLogDb"]]:
+        query = await cls.query.where(cls.shop_id == shop_id).gino.all()
         if not query:
             return None
         return query
