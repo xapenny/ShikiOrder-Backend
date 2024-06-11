@@ -7,7 +7,7 @@ from database.dbInit import db
 class SwiperDb(db.Model):
     __tablename__ = 'swiper'
 
-    id = Column(Integer, primary_key=True)
+    id = Column(Integer, primary_key=True, autoincrement=True)
     shop_id = Column(Integer, nullable=False)
     image = Column(String(255), nullable=False)
 

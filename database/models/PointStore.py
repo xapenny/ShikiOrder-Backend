@@ -8,7 +8,7 @@ from database.dbInit import db
 class PointStoreDb(db.Model):
     __tablename__ = 'point_store'
 
-    id = Column(Integer, primary_key=True)
+    id = Column(Integer, primary_key=True, autoincrement=True)
     shop_id = Column(Integer, nullable=False)
     price = Column(Integer, nullable=False)
     type = Column(Integer, nullable=False)
@@ -76,7 +76,7 @@ class PointStoreDb(db.Model):
 class PointStoreLogDb(db.Model):
     __tablename__ = 'point_store_log'
 
-    id = Column(Integer, primary_key=True)
+    id = Column(Integer, primary_key=True, autoincrement=True)
     user_id = Column(Integer, nullable=False)
     item_id = Column(Integer, nullable=False)
     shop_id = Column(Integer, nullable=False)

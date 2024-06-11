@@ -7,7 +7,7 @@ from database.dbInit import db
 class AdminInfoDb(db.Model):
     __tablename__ = 'admin'
 
-    id = Column(Integer, primary_key=True)
+    id = Column(Integer, primary_key=True, autoincrement=True)
     nickname = Column(String(255), nullable=False)
     role = Column(Integer, nullable=False)
     permission = Column(Integer, nullable=False)

@@ -16,7 +16,7 @@ class OrderState():
 class OrderDb(db.Model):
     __tablename__ = 'order'
 
-    id = Column(BigInteger, primary_key=True)
+    id = Column(BigInteger, primary_key=True, autoincrement=True)
     shop_id = Column(Integer, nullable=False)
     shop_name = Column(String(255), nullable=False)
     table_id = Column(Integer)

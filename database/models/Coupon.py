@@ -7,7 +7,7 @@ from database.dbInit import db
 
 class CouponDb(db.Model):
     __tablename__ = 'coupon'
-    id = Column(BigInteger, primary_key=True)
+    id = Column(BigInteger, primary_key=True, autoincrement=True)
     name = Column(String(255), nullable=False)
     shop_id = Column(Integer, nullable=False)
     threshold = Column(Integer)
@@ -66,7 +66,7 @@ class CouponDb(db.Model):
 class UserCouponDb(db.Model):
     __tablename__ = 'user_coupon'
 
-    id = Column(BigInteger, primary_key=True)
+    id = Column(BigInteger, primary_key=True, autoincrement=True)
     coupon_id = Column(Integer, nullable=False)
     user_id = Column(Integer, nullable=False)
 
@@ -104,4 +104,3 @@ class UserCouponDb(db.Model):
         for user in query:
             await user.delete()
         return query
-

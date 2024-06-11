@@ -7,7 +7,7 @@ from database.dbInit import db
 class UserInfoDb(db.Model):
     __tablename__ = 'user'
 
-    id = Column(Integer, primary_key=True)
+    id = Column(Integer, primary_key=True, autoincrement=True)
     open_id = Column(String(255), nullable=False, unique=True)
     nickname = Column(String(255), nullable=False)
     avatar = Column(String(255), nullable=False)

@@ -7,7 +7,7 @@ from database.dbInit import db
 class ProductDb(db.Model):
     __tablename__ = 'product'
 
-    id = Column(Integer, primary_key=True)
+    id = Column(Integer, primary_key=True, autoincrement=True)
     shop_id = Column(Integer, nullable=False)
     category_id = Column(Integer, nullable=False)
     price = Column(Integer, nullable=False)
@@ -90,7 +90,7 @@ class ProductDb(db.Model):
 class ProductCategoryDb(db.Model):
     __tablename__ = 'product_category'
 
-    id = Column(Integer, primary_key=True)
+    id = Column(Integer, primary_key=True, autoincrement=True)
     shop_id = Column(Integer, nullable=False)
     name = Column(String(255), nullable=False)
     description = Column(String(255))

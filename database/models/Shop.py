@@ -6,7 +6,7 @@ from database.dbInit import db
 
 class ShopDb(db.Model):
     __tablename__ = 'shop'
-    id = Column(BigInteger, primary_key=True)
+    id = Column(BigInteger, primary_key=True, autoincrement=True)
     name = Column(String(255), nullable=False)
     address = Column(String(255), nullable=False)
     announcement = Column(String(255))
