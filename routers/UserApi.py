@@ -4,8 +4,9 @@ from fastapi import APIRouter, Response, status, Depends
 
 from dependencies import (ACCESS_TOKEN_EXPIRE_MINUTES, create_access_token,
                           get_wc_code2session, get_current_active_user)
-from models.UserLoginModel import UserLoginRequestModel
 from database.models.UserInfo import UserInfoDb
+from database.models.Coupon import UserCouponDb
+from models.UserLoginModel import UserLoginRequestModel
 from models.UserInfoModel import UserBasicInfoModel, UpdateUserInfoRequestModel
 
 router = APIRouter(prefix='/user')
@@ -47,10 +48,35 @@ async def login_for_access_token(response: Response,
     return {"access_token": access_token, "token_type": "bearer"}
 
 
-@router.get("/info", response_model=UserBasicInfoModel)
+@router.get("/info")
 async def get_user_info(
         current_user: UserBasicInfoModel = Depends(get_current_active_user)):
-    return current_user
+    user_coupon = await UserCouponDb.get_user_all_coupons(
+        user_id=current_user.user_id)
+    return {
+        'user_id':
+        current_user.user_id,
+        'open_id':
+        current_user.open_id,
+        'nickname':
+        current_user.nickname,
+        'phone':
+        current_user.phone,
+        'avatar':
+        current_user.avatar,
+        'gender':
+        current_user.gender,
+        'total_points':
+        current_user.total_points,
+        'level_exp':
+        current_user.level_exp,
+        'last_signin_date':
+        current_user.last_signin_date,
+        'coupons': [] if user_coupon is None else [{
+            'id': x.id,
+            'coupon_id': x.coupon_id
+        } for x in user_coupon]
+    }
 
 
 @router.post("/update")

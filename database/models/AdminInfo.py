@@ -25,8 +25,8 @@ class AdminInfoDb(db.Model):
         return create
 
     @classmethod
-    async def is_user_exists(cls, phone: int) -> bool:
-        query = await cls.query.where(cls.phone == phone).gino.first()
+    async def is_user_exists(cls, user_id: int) -> bool:
+        query = await cls.query.where(cls.id == user_id).gino.first()
         return query is not None
 
     @classmethod

@@ -69,38 +69,62 @@ class UserCouponDb(db.Model):
     id = Column(BigInteger, primary_key=True, autoincrement=True)
     coupon_id = Column(Integer, nullable=False)
     user_id = Column(Integer, nullable=False)
+    shop_id = Column(Integer, nullable=False)
 
     @classmethod
-    async def add_user_coupon(cls, coupon_id: int,
+    async def add_user_coupon(cls, coupon_id: int, shop_id: int,
                               user_id: int) -> Optional["UserCouponDb"]:
-        create = await cls.create(coupon_id=coupon_id, user_id=user_id)
+        create = await cls.create(coupon_id=coupon_id,
+                                  user_id=user_id,
+                                  shop_id=shop_id)
         return create
 
     @classmethod
-    async def get_user_coupon(cls,
-                              user_id: int) -> Optional[list["UserCouponDb"]]:
+    async def get_user_coupons(cls, shop_id: int,
+                               user_id: int) -> Optional[list["UserCouponDb"]]:
+        query = await cls.query.where(cls.user_id == user_id
+                                      ).where(cls.shop_id == shop_id
+                                              ).gino.all()
+        if not query:
+            return None
+        return query
+
+    @classmethod
+    async def get_user_all_coupons(
+            cls, user_id: int) -> Optional[list["UserCouponDb"]]:
         query = await cls.query.where(cls.user_id == user_id).gino.all()
         if not query:
             return None
         return query
 
     @classmethod
-    async def consume_user_coupon(cls, coupon_id: int,
+    async def consume_user_coupon(cls, id: int, shop_id: int,
                                   user_id: int) -> Optional["UserCouponDb"]:
-        query = await cls.query.where(cls.coupon_id == coupon_id
+        query = await cls.query.where(cls.id == id
                                       ).where(cls.user_id == user_id
-                                              ).gino.first()
+                                              ).where(cls.shop_id == shop_id
+                                                      ).gino.first()
         if not query:
             return None
         await query.delete()
         return query
 
     @classmethod
-    async def remove_coupon_users(cls,
+    async def remove_coupon_users(cls, shop_id: int,
                                   coupon_id: int) -> Optional["UserCouponDb"]:
-        query = await cls.query.where(cls.coupon_id == coupon_id).gino.all()
+        query = await cls.query.where(cls.coupon_id == coupon_id
+                                      ).where(cls.shop_id == shop_id
+                                              ).gino.all()
         if not query:
             return None
         for user in query:
             await user.delete()
+        return query
+
+    @classmethod
+    async def get_user_coupon_by_id(
+            cls, user_coupon_id: int) -> Optional["UserCouponDb"]:
+        query = await cls.query.where(cls.id == user_coupon_id).gino.first()
+        if not query:
+            return None
         return query

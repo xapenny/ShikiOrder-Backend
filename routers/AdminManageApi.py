@@ -406,10 +406,10 @@ async def add_admin_user_api(
         return {"error": "只能编辑比自己权限低的用户"}
     if not await ShopDb.is_shop_exists(shop_id=request.permission):
         return {"error": "该店铺不存在"}
-    is_shop_exists = await AdminInfoDb.is_user_exists(phone=request.phone)
+    is_admin_exists = await AdminInfoDb.is_user_exists(user_id=request.user_id)
     if request.user_id == -1:
         # Add new user
-        if is_shop_exists:
+        if is_admin_exists:
             return {"error": "该手机号已存在"}
         result = await AdminInfoDb.add_admin(nickname=request.username,
                                              role=request.role,
@@ -418,7 +418,7 @@ async def add_admin_user_api(
                                              password=request.password)
     else:
         # Update user
-        if not is_shop_exists:
+        if not is_admin_exists:
             return {"error": "该用户不存在"}
         result = await AdminInfoDb.update_admin_info(
             id=request.user_id,
@@ -534,7 +534,8 @@ async def remove_coupon_api(
             return {"error": "权限不足"}
     else:
         return {"error": "权限不足"}
-    await UserCouponDb.remove_coupon_users(coupon_id=request.coupon_id)
+    await UserCouponDb.remove_coupon_users(coupon_id=request.coupon_id,
+                                           shop_id=coupon.shop_id)
     result = await CouponDb.remove_coupon(coupon_id=request.coupon_id)
     if result is None:
         return {"error": "操作失败"}
@@ -565,7 +566,9 @@ async def gift_coupon_api(
         for user in users:
             for _ in range(request.quantity):
                 temp = await UserCouponDb.add_user_coupon(
-                    coupon_id=request.coupon_id, user_id=user.id)
+                    coupon_id=request.coupon_id,
+                    user_id=user.id,
+                    shop_id=request.shop_id)
                 result = result and (temp is not None)
         if not result:
             return {"error": "操作失败"}
@@ -577,7 +580,9 @@ async def gift_coupon_api(
         result = True
         for _ in range(request.quantity):
             temp = await UserCouponDb.add_user_coupon(
-                coupon_id=request.coupon_id, user_id=user.id)
+                coupon_id=request.coupon_id,
+                user_id=user.id,
+                shop_id=request.shop_id)
             result = result and (temp is not None)
         if not result:
             return {"error": "操作失败"}

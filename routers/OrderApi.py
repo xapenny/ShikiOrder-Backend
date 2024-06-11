@@ -33,29 +33,39 @@ async def create_order(
 
     # Inspect coupon
     if request.used_coupon_id != -1:
-        coupon = await CouponDb.get_coupon_by_id(request.used_coupon_id)
-        if coupon is None:
-            response.status_code = status.HTTP_400_BAD_REQUEST
+        user_coupon = await UserCouponDb.get_user_coupon_by_id(
+            user_coupon_id=request.used_coupon_id)
+        if user_coupon is None:
             return {"error": "没有找到该优惠券"}
+        coupon = await CouponDb.get_coupon_by_id(
+            coupon_id=user_coupon.coupon_id)
+        if coupon is None:
+            await UserCouponDb.consume_user_coupon(id=user_coupon.id,
+                                                   shop_id=request.shop_id,
+                                                   user_id=user_info.user_id)
+            response.status_code = status.HTTP_400_BAD_REQUEST
+            return {"error": "优惠券已失效"}
         # Calculate discount
         if coupon.threshold is not None and total_price < coupon.threshold:
             response.status_code = status.HTTP_400_BAD_REQUEST
             return {"error": "优惠券未达到使用条件"}
         if coupon.discount is not None:
             total_price -= coupon.discount
-        elif coupon.discount_percentage is not None:
-            total_price = int(total_price *
-                              (1 - coupon.discount_percentage / 100))
+        if coupon.discount_percentage is not None:
+            total_price = round(total_price *
+                                (1 - coupon.discount_percentage / 100))
 
     # Verify total price
-    if total_price != request.total_price:
+    if abs(total_price - request.total_price) > 1:
         response.status_code = status.HTTP_400_BAD_REQUEST
         return {"error": "优惠金额校验失败"}
 
     # Consume coupon
     if request.used_coupon_id != -1:
         coupon_result = await UserCouponDb.consume_user_coupon(
-            coupon_id=request.used_coupon_id, user_id=user_info.user_id)
+            id=request.used_coupon_id,
+            shop_id=request.shop_id,
+            user_id=user_info.user_id)
         if coupon_result is None:
             response.status_code = status.HTTP_400_BAD_REQUEST
             return {"error": "非法请求"}

@@ -9,23 +9,19 @@ router = APIRouter(prefix='/point-store')
 
 @router.get("/items")
 async def get_point_shop_items(
-    shop: int,
-    response: Response,
-    _: UserBasicInfoModel = Depends(get_current_active_user)):
+    shop: int, _: UserBasicInfoModel = Depends(get_current_active_user)):
     items = await PointStoreDb.get_items_by_shop_id(shop_id=shop)
-    if items is None:
-        response.status_code = status.HTTP_400_BAD_REQUEST
-        return {"error": "积分商城没有商品"}
     result = []
-    for item in items:
-        result.append({
-            'id': item.id,
-            'name': item.name,
-            'price': item.price,
-            'image': item.image,
-            'stock': item.stock,
-            'description': item.description
-        })
+    if items is not None:
+        for item in items:
+            result.append({
+                'id': item.id,
+                'name': item.name,
+                'price': item.price,
+                'image': item.image,
+                'stock': item.stock,
+                'description': item.description
+            })
     return {'items': result}
 
 
