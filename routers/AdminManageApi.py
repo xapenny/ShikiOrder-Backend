@@ -7,13 +7,15 @@ from models.AdminModel import (
     RemoveProductRequestModel, UpdateProductRequestModel,
     RemoveProductCategoryRequestModel, UpdateProductCategoryRequestModel,
     CreateCouponRequestModel, RemoveCouponRequestModel, UpdateShopRequestModel,
-    GiftCouponRequestModel)
+    GiftCouponRequestModel, UpdatePointStoreItemRequestModel,
+    RemovePointStoreItemRequestModel)
 from database.models.AdminInfo import AdminInfoDb
 from database.models.UserInfo import UserInfoDb
 from database.models.Order import OrderDb
 from database.models.Shop import ShopDb
 from database.models.Product import ProductDb, ProductCategoryDb
 from database.models.Coupon import CouponDb, UserCouponDb
+from database.models.PointStore import PointStoreDb
 from utils.enums import ORDER_STATE
 from utils.oss import upload_image
 
@@ -530,3 +532,92 @@ async def gift_coupon_api(
         if not result:
             return {"error": "操作失败"}
         return {"message": "操作成功"}
+
+
+@router.get("/point-store/get")
+async def get_point_store_api(current_admin: AdminBasicInfoModel = Depends(
+    get_current_active_admin)):
+    if current_admin.role == 0:
+        point_store = await PointStoreDb.get_all_items()
+    else:
+        point_store = await PointStoreDb.get_items_by_shop_id(
+            shop_id=current_admin.permission)
+    return_list = []
+    if point_store is not None:
+        for item in point_store:
+            return_list.append({
+                "itemId": item.id,
+                "shopId": item.shop_id,
+                "type": item.type,
+                "name": item.name,
+                "image": item.image,
+                "price": item.price,
+                "stock": item.stock,
+                "description": item.description
+            })
+    return {"items": return_list}
+
+@router.post("/point-store/update")
+async def update_point_store_item_api(
+    request: UpdatePointStoreItemRequestModel,
+    current_admin: AdminBasicInfoModel = Depends(get_current_active_admin)):
+    if current_admin.role == 0:
+        pass
+    elif current_admin.role == 1:
+        if current_admin.permission != request.shop_id:
+            return {"error": "权限不足"}
+    else:
+        return {"error": "权限不足"}
+
+    # Upload Image
+    image_url = request.item_image
+    if not request.item_image.startswith('http'):
+        image_url = upload_image(request.item_image)
+        if image_url is None:
+            return {"error": "图片上传失败"}
+
+    item_id = request.item_id
+    if request.item_id == -1:
+        # Add new item
+        result = await PointStoreDb.add_item(
+            shop_id=request.shop_id,
+            price=request.item_price,
+            type=request.item_type,
+            name=request.item_name,
+            image=image_url,
+            stock=request.item_stock,
+            description=request.item_description)
+        item_id = result.id
+    else:
+        # Update item
+        result = await PointStoreDb.update_item(
+            item_id=request.item_id,
+            price=request.item_price,
+            type=request.item_type,
+            name=request.item_name,
+            image=image_url,
+            stock=request.item_stock,
+            description=request.item_description)
+    if result is None:
+        return {"error": "操作失败"}
+    return {"message": "操作成功", "item_id": item_id}
+
+@router.post("/point-store/remove")
+async def remove_point_store_item_api(
+    request: RemovePointStoreItemRequestModel,
+    current_admin: AdminBasicInfoModel = Depends(get_current_active_admin)):
+    item = await PointStoreDb.get_item_by_id(item_id=request.item_id)
+    if item is None:
+        return {"error": "商品不存在"}
+    if current_admin.role == 0:
+        pass
+    elif current_admin.role == 1:
+        if current_admin.permission != item.shop_id:
+            return {"error": "权限不足"}
+    else:
+        return {"error": "权限不足"}
+
+    result = await PointStoreDb.remove_item(item_id=request.item_id)
+    if result is None:
+        return {"error": "操作失败"}
+    return {"message": "操作成功"}

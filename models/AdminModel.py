@@ -91,3 +91,18 @@ class GiftCouponRequestModel(BaseModel):
     coupon_id: int
     shop_id: int
     quantity: int
+
+
+class UpdatePointStoreItemRequestModel(BaseModel):
+    item_id: int
+    shop_id: int
+    item_type: Literal[0, 1]
+    item_name: str
+    item_price: int
+    item_description: str
+    item_image: str
+    item_stock: int
+
+
+class RemovePointStoreItemRequestModel(BaseModel):
+    item_id: int
