@@ -77,3 +77,12 @@ class AdminInfoDb(db.Model):
             return None
         await query.delete()
         return query
+
+    @classmethod
+    async def remove_admins_by_permission(cls, permission: int):
+        query = await cls.query.where(cls.permission == permission).gino.all()
+        if not query:
+            return None
+        for q in query:
+            await q.delete()
+        return query

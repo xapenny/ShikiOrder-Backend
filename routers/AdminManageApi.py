@@ -109,6 +109,7 @@ async def remove_shop_api(
     await ProductCategoryDb.remove_categories_by_shop_id(
         shop_id=request.shop_id)
     await SwiperDb.remove_swipers_by_shop_id(shop_id=request.shop_id)
+    await AdminInfoDb.remove_admins_by_permission(permission=request.shop_id)
     result = await ShopDb.remove_shop(shop_id=request.shop_id)
     if result is None:
         return {"error": "删除失败"}
