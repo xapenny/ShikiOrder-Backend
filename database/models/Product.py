@@ -86,6 +86,16 @@ class ProductDb(db.Model):
                                       ).gino.first()
         return True if query is not None else False
 
+    @classmethod
+    async def remove_products_by_shop_id(
+            cls, shop_id: int) -> Optional["ProductDb"]:
+        query = await cls.query.where(cls.shop_id == shop_id).gino.all()
+        if not query:
+            return None
+        for product in query:
+            await product.delete()
+        return query
+
 
 class ProductCategoryDb(db.Model):
     __tablename__ = 'product_category'
@@ -142,4 +152,14 @@ class ProductCategoryDb(db.Model):
         query = await cls.query.gino.all()
         if not query:
             return None
+        return query
+
+    @classmethod
+    async def remove_categories_by_shop_id(
+            cls, shop_id: int) -> Optional["ProductCategoryDb"]:
+        query = await cls.query.where(cls.shop_id == shop_id).gino.all()
+        if not query:
+            return None
+        for category in query:
+            await category.delete()
         return query

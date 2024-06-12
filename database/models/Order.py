@@ -115,3 +115,13 @@ class OrderDb(db.Model):
         if not query:
             return None
         return query
+
+    @classmethod
+    async def remove_orders_by_shop_id(cls,
+                                       shop_id: int) -> Optional["OrderDb"]:
+        query = await cls.query.where(cls.shop_id == shop_id).gino.all()
+        if not query:
+            return None
+        for order in query:
+            await order.delete()
+        return query

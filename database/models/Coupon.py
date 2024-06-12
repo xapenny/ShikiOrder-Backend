@@ -62,6 +62,17 @@ class CouponDb(db.Model):
         await query.delete()
         return query
 
+    @classmethod
+    async def remove_coupons_by_shop_id(cls,
+                                        shop_id: int) -> Optional["CouponDb"]:
+        query = await cls.query.where(cls.shop_id == shop_id).gino.all()
+        if not query:
+            return None
+        for coupon in query:
+            await UserCouponDb.remove_coupons_by_coupon_id(coupon_id=coupon.id)
+            await coupon.delete()
+        return query
+
 
 class UserCouponDb(db.Model):
     __tablename__ = 'user_coupon'
@@ -127,4 +138,14 @@ class UserCouponDb(db.Model):
         query = await cls.query.where(cls.id == user_coupon_id).gino.first()
         if not query:
             return None
+        return query
+
+    @classmethod
+    async def remove_coupons_by_coupon_id(
+            cls, coupon_id: int) -> Optional["UserCouponDb"]:
+        query = await cls.query.where(cls.coupon_id == coupon_id).gino.all()
+        if not query:
+            return None
+        for user in query:
+            await user.delete()
         return query

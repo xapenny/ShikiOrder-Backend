@@ -39,3 +39,12 @@ class SwiperDb(db.Model):
         if not query:
             return None
         return query
+
+    @classmethod
+    async def remove_swipers_by_shop_id(cls, shop_id: int):
+        query = await cls.query.where(cls.shop_id == shop_id).gino.all()
+        if not query:
+            return None
+        for swiper in query:
+            await swiper.delete()
+        return query

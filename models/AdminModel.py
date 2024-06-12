@@ -47,6 +47,10 @@ class UpdateShopRequestModel(BaseModel):
     shop_announcement: str
 
 
+class RemoveShopRequestModel(BaseModel):
+    shop_id: int
+
+
 class AddShopSwiperRequestModel(BaseModel):
     shop_id: int
     image: str

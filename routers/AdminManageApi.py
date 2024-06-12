@@ -7,9 +7,9 @@ from models.AdminModel import (
     RemoveProductRequestModel, UpdateProductRequestModel,
     RemoveProductCategoryRequestModel, UpdateProductCategoryRequestModel,
     CreateCouponRequestModel, RemoveCouponRequestModel, UpdateShopRequestModel,
-    GiftCouponRequestModel, UpdatePointStoreItemRequestModel,
-    AddShopSwiperRequestModel, RemoveShopSwiperRequestModel,
-    RemovePointStoreItemRequestModel)
+    RemoveShopRequestModel, GiftCouponRequestModel,
+    UpdatePointStoreItemRequestModel, AddShopSwiperRequestModel,
+    RemoveShopSwiperRequestModel, RemovePointStoreItemRequestModel)
 from database.models.AdminInfo import AdminInfoDb
 from database.models.UserInfo import UserInfoDb
 from database.models.Order import OrderDb
@@ -17,7 +17,7 @@ from database.models.Shop import ShopDb
 from database.models.Swiper import SwiperDb
 from database.models.Product import ProductDb, ProductCategoryDb
 from database.models.Coupon import CouponDb, UserCouponDb
-from database.models.PointStore import PointStoreDb
+from database.models.PointStore import PointStoreDb, PointStoreLogDb
 from utils.enums import ORDER_STATE
 from utils.oss import upload_image
 
@@ -90,6 +90,29 @@ async def update_shop_api(
 
             return {"error": "修改失败"}
         return {"message": "修改成功"}
+
+
+@router.post("/shop/remove")
+async def remove_shop_api(
+    request: RemoveShopRequestModel,
+    current_admin: AdminBasicInfoModel = Depends(get_current_active_admin)):
+    shop = await ShopDb.get_shop_by_id(shop_id=request.shop_id)
+    if shop is None:
+        return {"error": "店铺不存在"}
+    if current_admin.role != 0:
+        return {"error": "权限不足"}
+    await CouponDb.remove_coupons_by_shop_id(shop_id=request.shop_id)
+    await OrderDb.remove_orders_by_shop_id(shop_id=request.shop_id)
+    await PointStoreDb.remove_items_by_shop_id(shop_id=request.shop_id)
+    await PointStoreLogDb.remove_logs_by_shop_id(shop_id=request.shop_id)
+    await ProductDb.remove_products_by_shop_id(shop_id=request.shop_id)
+    await ProductCategoryDb.remove_categories_by_shop_id(
+        shop_id=request.shop_id)
+    await SwiperDb.remove_swipers_by_shop_id(shop_id=request.shop_id)
+    result = await ShopDb.remove_shop(shop_id=request.shop_id)
+    if result is None:
+        return {"error": "删除失败"}
+    return {"message": "删除成功"}
 
 
 @router.post("/swiper/add")

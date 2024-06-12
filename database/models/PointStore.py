@@ -72,6 +72,15 @@ class PointStoreDb(db.Model):
             return None
         return query
 
+    @classmethod
+    async def remove_items_by_shop_id(
+            cls, shop_id: int) -> Optional["PointStoreDb"]:
+        query = await cls.query.where(cls.shop_id == shop_id).gino.all()
+        if not query:
+            return None
+        await query.delete()
+        return query
+
 
 class PointStoreLogDb(db.Model):
     __tablename__ = 'point_store_log'
@@ -113,4 +122,13 @@ class PointStoreLogDb(db.Model):
         query = await cls.query.where(cls.shop_id == shop_id).gino.all()
         if not query:
             return None
+        return query
+
+    @classmethod
+    async def remove_logs_by_shop_id(
+            cls, shop_id: int) -> Optional["PointStoreLogDb"]:
+        query = await cls.query.where(cls.shop_id == shop_id).gino.all()
+        if not query:
+            return None
+        await query.delete()
         return query
