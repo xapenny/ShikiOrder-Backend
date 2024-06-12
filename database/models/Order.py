@@ -101,17 +101,20 @@ class OrderDb(db.Model):
         return [x.id for x in query]
 
     @classmethod
-    async def get_orders_by_shop_id(cls,
+    async def get_orders_by_shop_id(cls, page_size: int, offset: int,
                                     shop_id: int) -> Optional[list["OrderDb"]]:
         query = await cls.query.where(cls.shop_id == shop_id).where(
-            cls.time >= datetime.now() - timedelta(days=30)).gino.all()
+            cls.time >= datetime.now() - timedelta(days=30)
+        ).order_by(cls.time.desc()).offset(offset).limit(page_size).gino.all()
         if not query:
             return None
         return query
 
     @classmethod
-    async def get_all_orders(cls) -> Optional[list["OrderDb"]]:
-        query = await cls.query.gino.all()
+    async def get_all_orders(cls, page_size: int,
+                             offset: int) -> Optional[list["OrderDb"]]:
+        query = await cls.query.order_by(
+            cls.time.desc()).offset(offset).limit(page_size).gino.all()
         if not query:
             return None
         return query
@@ -125,3 +128,12 @@ class OrderDb(db.Model):
         for order in query:
             await order.delete()
         return query
+
+    @classmethod
+    async def get_order_counts_by_shop_id(cls, shop_id: int) -> int:
+        return await db.select([db.func.count(cls.id)]
+                               ).where(cls.shop_id == shop_id).gino.scalar()
+
+    @classmethod
+    async def get_all_order_counts(cls):
+        return await db.func.count(cls.id).gino.scalar()

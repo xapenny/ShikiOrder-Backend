@@ -162,12 +162,22 @@ async def remove_shop_swiper_api(
 
 
 @router.get("/order/get")
-async def get_admin_orders_api(current_admin: AdminBasicInfoModel = Depends(
-    get_current_active_admin)):
+async def get_admin_orders_api(
+    page: int,
+    current_admin: AdminBasicInfoModel = Depends(get_current_active_admin)):
+    if page < 1:
+        return {"error": "页码错误"}
+    count = 0
     if current_admin.role == 0:
-        orders = await OrderDb.get_all_orders()
+        orders = await OrderDb.get_all_orders(page_size=10,
+                                              offset=(page - 1) * 10)
+        count = await OrderDb.get_all_order_counts()
     else:
         orders = await OrderDb.get_orders_by_shop_id(
+            page_size=10,
+            offset=(page - 1) * 10,
+            shop_id=current_admin.permission)
+        count = await OrderDb.get_order_counts_by_shop_id(
             shop_id=current_admin.permission)
     return_list = []
     if orders is not None:
@@ -206,7 +216,7 @@ async def get_admin_orders_api(current_admin: AdminBasicInfoModel = Depends(
                                   order.product_quantities.split(";"))]
             })
 
-    return {"orders": return_list}
+    return {"orders": return_list, "page": page, "total_count": count}
 
 
 @router.post("/order/state/update")
