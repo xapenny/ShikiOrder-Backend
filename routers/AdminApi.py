@@ -70,7 +70,7 @@ async def update_admin_info_api(
 async def get_dashboard_info_api(current_admin: AdminBasicInfoModel = Depends(
     get_current_active_admin)):
     shops = []
-    if current_admin.permission == 0:
+    if current_admin.role == 0:
         shops = await ShopDb.get_all_shops()
     else:
         shops = [await ShopDb.get_shop_by_id(current_admin.permission)]
@@ -90,7 +90,9 @@ async def get_dashboard_info_api(current_admin: AdminBasicInfoModel = Depends(
     # Get orders from all shops
     all_orders: list[OrderDb] = []
     for shop in shops:
-        shop_orders = await OrderDb.get_orders_by_shop_id(shop.id)
+        shop_orders = await OrderDb.get_orders_by_shop_id(page_size=10000,
+                                                          offset=0,
+                                                          shop_id=shop.id)
         if shop_orders is not None:
             all_orders.extend(shop_orders)
     # Calculate dashboard data
