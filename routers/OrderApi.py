@@ -73,6 +73,20 @@ async def create_order(
     # Create order
     product_ids = ";".join([str(x[0]) for x in request.products])
     product_quantities = ";".join([str(x[1]) for x in request.products])
+    # Calculate Stock
+    new_stock_ls = []
+    for product_id, quantity in request.products:
+        product = next((p for p in products if p.id == int(product_id)), None)
+        if product is None:
+            response.status_code = status.HTTP_400_BAD_REQUEST
+            return {"error": "非法请求"}
+        if product.stock < quantity:
+            response.status_code = status.HTTP_400_BAD_REQUEST
+            return {"error": "库存不足"}
+        new_stock_ls.append((product.id, product.stock - quantity))
+    for product_id, new_stock in new_stock_ls:
+        await ProductDb.update_product_stock(product_id=product_id,
+                                             stock=new_stock)
     verify_code = VerifyCode.get_code(is_takeout=request.is_takeout)
     order = await OrderDb.create_order(shop_id=request.shop_id,
                                        shop_name=request.shop_name,
@@ -179,9 +193,5 @@ async def pay_order(
         return {"error": "订单状态不允许支付"}
 
         # Fake Payment
-    if (randint(0, 1)):
-        await OrderDb.update_order_state(order_id=id, state=OrderState.PENDING)
-        return {"order_id": id}
-    else:
-        response.status_code = status.HTTP_400_BAD_REQUEST
-        return {"error": "付款失败(测试)"}
+    await OrderDb.update_order_state(order_id=id, state=OrderState.PENDING)
+    return {"order_id": id}
