@@ -48,3 +48,23 @@ async def purchase_item(
                                   shop_id=item_info.shop_id,
                                   item_id=item_info.id)
     return {"success": "购买成功"}
+
+
+@router.get("/logs")
+async def get_log(
+    shop: int,
+    user_info: UserBasicInfoModel = Depends(get_current_active_user)):
+    logs = await PointStoreLogDb.get_logs_by_uid_and_shop_id(
+        user_id=user_info.user_id, shop_id=shop)
+    result = []
+    if logs is not None:
+        for log in logs:
+            result.append({
+                'id': log.id,
+                'user_id': log.user_id,
+                'shop_id': log.shop_id,
+                'express_id': log.express_id,
+                'item_id': log.item_id,
+                'created_at': log.created_at
+            })
+    return {'logs': result}

@@ -132,3 +132,14 @@ class PointStoreLogDb(db.Model):
             return None
         await query.delete()
         return query
+
+    @classmethod
+    async def get_logs_by_uid_and_shop_id(
+            cls, user_id: int,
+            shop_id: int) -> Optional[list["PointStoreLogDb"]]:
+        query = await cls.query.where(cls.user_id == user_id
+                                      ).where(cls.shop_id == shop_id
+                                              ).gino.all()
+        if not query:
+            return None
+        return query
