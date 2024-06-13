@@ -22,7 +22,7 @@ class AdminUpdateInfoRequestModel(BaseModel):
 class UpdateAdminUserRequestModel(BaseModel):
     user_id: int
     username: str
-    phone: str
+    phone: int
     password: str
     role: int
     permission: int
