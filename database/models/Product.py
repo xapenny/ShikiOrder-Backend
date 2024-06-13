@@ -96,6 +96,12 @@ class ProductDb(db.Model):
             await product.delete()
         return query
 
+    @classmethod
+    async def update_product_stock(cls, product_id: int, stock: int) -> bool:
+        query = update(cls).where(cls.id == product_id).values(stock=stock)
+        result = await db.status(query)
+        return True if result else False
+
 
 class ProductCategoryDb(db.Model):
     __tablename__ = 'product_category'

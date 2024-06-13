@@ -102,3 +102,10 @@ class UserInfoDb(db.Model):
         if not query:
             return None
         return query
+
+    @classmethod
+    async def get_user_by_id(cls, user_id: int) -> Optional["UserInfoDb"]:
+        query = await cls.query.where(cls.id == user_id).gino.first()
+        if not query:
+            return None
+        return query

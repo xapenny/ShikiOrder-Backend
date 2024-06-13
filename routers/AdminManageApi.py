@@ -231,6 +231,12 @@ async def update_order_state_api(
         return {"error": "非法请求"}
     if order.state == 4 and request.state == 1:
         return {"error": "订单已完成，不能取消"}
+    if request.state == 4:
+        user = await UserInfoDb.get_user_by_id(user_id=order.user_id)
+        if user is not None:
+            await UserInfoDb.update_user_info(open_id=user.open_id,
+                                              total_points=user.total_points +
+                                              int(order.paid_price / 100))
     result = await OrderDb.update_order_state(order_id=request.order_id,
                                               state=request.state)
     if result is None:
@@ -463,7 +469,7 @@ async def add_admin_user_api(
             password=request.password)
     if result is None:
         return {"error": "操作失败"}
-    return {"message": "操作成功"}
+    return {"message": "操作成功", "user_id": result.id}
 
 
 @router.post("/user/remove")
@@ -597,7 +603,7 @@ async def gift_coupon_api(
         if users is None:
             return {"error": "没有用户"}
         result = True
-        for user in users:
+        for user in users[:10]:
             for _ in range(request.quantity):
                 temp = await UserCouponDb.add_user_coupon(
                     coupon_id=request.coupon_id,
