@@ -15,8 +15,9 @@ class AdminInfoDb(db.Model):
     password = Column(String(32), nullable=False)
 
     @classmethod
-    async def add_admin(cls, nickname: str, role: Literal[0, 1, 2],
-                        permission: int, phone: int, password: str):
+    async def add_admin(cls, nickname: str, role: Literal[0, 1,
+                                                          2], permission: int,
+                        phone: int, password: str) -> Optional["AdminInfoDb"]:
         create = await cls.create(nickname=nickname,
                                   role=role,
                                   permission=permission,
